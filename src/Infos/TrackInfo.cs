@@ -38,14 +38,13 @@ namespace Dysc.Infos {
         public ProviderType Provider { get; internal set; }
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="trackInfo"></param>
         /// <returns></returns>
         public bool IsEqual(TrackInfo trackInfo) {
-            return Url.Equals(trackInfo.Url, StringComparison.InvariantCultureIgnoreCase) ||
-                   Id.IsStrongMatch(trackInfo.Id) ||
-                   $"{Author} {Title}".IsStrongMatch($"{trackInfo.Author} {trackInfo.Title}");
-        }
-    }
+			return Url.Equals(trackInfo.Url, StringComparison.InvariantCultureIgnoreCase) ||
+			       Id.IsStrongMatch(trackInfo.Id) ||
+			       $"{Author} {Title}".IsStrongMatch($"{trackInfo.Author} {trackInfo.Title}");
+		}
+	}
 }
