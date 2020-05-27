@@ -21,5 +21,5 @@
         /// <summary>
         /// </summary>
         public string ArtworkUrl { get; internal set; }
-    }
+	}
 }

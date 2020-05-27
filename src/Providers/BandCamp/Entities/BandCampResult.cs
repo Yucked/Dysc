@@ -2,23 +2,23 @@
 using System.Text.Json.Serialization;
 
 namespace Dysc.Providers.BandCamp.Entities {
-    internal struct BandCampResult {
-        [JsonPropertyName("current")]
-        public BandCampCurrent Current { get; set; }
+	internal struct BandCampResult {
+		[JsonPropertyName("current")]
+		public BandCampCurrent Current { get; set; }
 
-        [JsonPropertyName("art_id")]
-        public long ArtId { get; set; }
+		[JsonPropertyName("art_id")]
+		public long ArtId { get; set; }
 
-        [JsonPropertyName("trackinfo")]
-        public IEnumerable<BandCampTrack> TrackInfo { get; set; }
+		[JsonPropertyName("trackinfo")]
+		public IEnumerable<BandCampTrack> TrackInfo { get; set; }
 
-        [JsonPropertyName("url")]
-        public string Url { get; set; }
+		[JsonPropertyName("url")]
+		public string Url { get; set; }
 
-        [JsonPropertyName("artist")]
-        public string Artist { get; set; }
+		[JsonPropertyName("artist")]
+		public string Artist { get; set; }
 
-        [JsonPropertyName("item_type")]
-        public string ItemType { get; set; }
-    }
+		[JsonPropertyName("item_type")]
+		public string ItemType { get; set; }
+	}
 }

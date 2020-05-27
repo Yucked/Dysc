@@ -13,5 +13,5 @@
         /// <summary>
         /// </summary>
         public string AvatarUrl { get; internal set; }
-    }
+	}
 }
