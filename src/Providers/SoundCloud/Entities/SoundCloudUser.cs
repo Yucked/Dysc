@@ -1,23 +1,21 @@
 ﻿using System.Text.Json.Serialization;
-using Dysc.Infos;
+using Dysc.Interfaces;
 
 namespace Dysc.Providers.SoundCloud.Entities {
-	internal sealed class SoundCloudUser {
-		[JsonIgnore]
-		public AuthorInfo ToAuthorInfo
-			=> new AuthorInfo {
-				Name = Username,
-				Url = PermalinkUrl,
-				AvatarUrl = AvatarUrl
-			};
-
+	internal class SoundCloudUser : ISourceAuthor {
 		[JsonPropertyName("avatar_url")]
 		public string AvatarUrl { get; set; }
 
+		[JsonPropertyName("id")]
+		public long RawId { get; set; }
+
+		string ISourceAuthor.Id
+			=> $"{RawId}";
+
 		[JsonPropertyName("permalink_url")]
-		public string PermalinkUrl { get; set; }
+		public string Url { get; set; }
 
 		[JsonPropertyName("username")]
-		public string Username { get; set; }
+		public string Name { get; set; }
 	}
 }
