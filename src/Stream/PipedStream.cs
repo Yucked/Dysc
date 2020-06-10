@@ -99,12 +99,11 @@ namespace Dysc.Stream {
 			if (!target.CanWrite) {
 				throw new Exception("Can't write to target stream.");
 			}
-			
+
 			do {
 				var readResult = await _pipe.Reader.ReadAsync(_cancellationToken.Token);
 				foreach (var memory in readResult.Buffer) {
 					var scaledMemory = ScaleVolume(memory);
-					Position += scaledMemory.ToTimeSpan();
 					await target.WriteAsync(scaledMemory);
 				}
 
