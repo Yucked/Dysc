@@ -99,26 +99,21 @@ namespace Dysc.Stream {
 			if (!target.CanWrite) {
 				throw new Exception("Can't write to target stream.");
 			}
-
-			while (_pipe.Reader.TryRead(out var result) && !_cancellationToken.IsCancellationRequested) {
-				if (Volatile.Read(ref _isPaused)) {
-					IsPlaying = false;
-					await _pauseTask.Task;
-				}
-
-				if (result.IsCanceled || result.IsCompleted) {
-					IsPlaying = false;
-				}
-
-				foreach (var memory in result.Buffer) {
+			
+			do {
+				var readResult = await _pipe.Reader.ReadAsync(_cancellationToken.Token);
+				foreach (var memory in readResult.Buffer) {
 					var scaledMemory = ScaleVolume(memory);
-					await target.WriteAsync(scaledMemory);
 					Position += scaledMemory.ToTimeSpan();
+					await target.WriteAsync(scaledMemory);
 				}
 
-				IsPlaying = true;
-				_pipe.Reader.AdvanceTo(result.Buffer.End);
-			}
+				if (readResult.IsCompleted) {
+					break;
+				}
+
+				_pipe.Reader.AdvanceTo(readResult.Buffer.End);
+			} while (!_cancellationToken.IsCancellationRequested);
 
 			await _pipe.Reader.CompleteAsync();
 		}
