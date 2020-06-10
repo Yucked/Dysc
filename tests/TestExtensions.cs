@@ -36,12 +36,13 @@ namespace Dysc.Tests {
 
 		public static void IsValidPlaylist(this IPlaylistResult playlistResult) {
 			Assert.IsNotNull(playlistResult);
-			Assert.IsNotNull(playlistResult.Author);
-			Assert.IsNotNull(playlistResult.Duration);
-			Assert.IsNotNull(playlistResult.Id);
-			Assert.IsNotNull(playlistResult.Title);
 			Assert.IsNotNull(playlistResult.Tracks);
 			Assert.IsNotNull(playlistResult.Url);
+			Assert.IsNotNull(playlistResult.Duration);
+			
+			Assert.IsNotNull(playlistResult.Author);
+			Assert.IsNotNull(playlistResult.Id);
+			Assert.IsNotNull(playlistResult.Title);
 			Assert.IsNotNull(playlistResult.ArtworkUrl);
 		}
 
