@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -75,6 +76,12 @@ namespace Dysc.Providers.SoundCloud {
 			   .WithParameter("client_id", SoundCloudParser.ClientId);
 
 			var soundCloudPlaylist = await _httpClient.ReadFromJsonAsync<SoundCloudPlaylist>(requestUrl);
+			var tracks = soundCloudPlaylist.CloudTracks.Where(x =>
+				string.IsNullOrWhiteSpace(x.Title) &&
+				string.IsNullOrWhiteSpace(x.Url) &&
+				(x.FullDuration > 0 || x.TempDuration > 0));
+
+			soundCloudPlaylist.CloudTracks = tracks.ToArray();
 			return soundCloudPlaylist;
 		}
 
