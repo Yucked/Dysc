@@ -1,71 +1,56 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Dysc.Infos;
 using Dysc.Interfaces;
-using Dysc.Search;
+using Dysc.Stream;
 
 namespace Dysc.Providers.Http {
-    /// <summary>
-    /// </summary>
-    public sealed class HttpProvider : IAudioProvider {
+	/// <inheritdoc />
+	public sealed class HttpProvider : ISourceProvider {
 		private readonly HttpClient _httpClient;
 
-        /// <summary>
-        /// </summary>
-        /// <param name="httpClient"></param>
-        public HttpProvider(HttpClient httpClient) {
+		/// <summary>
+		/// </summary>
+		/// <param name="httpClient"></param>
+		public HttpProvider(HttpClient httpClient) {
 			_httpClient = httpClient;
 		}
 
-        /// <summary>
-        /// </summary>
-        /// <param name="clientFactory"></param>
-        public HttpProvider(IHttpClientFactory clientFactory)
+		/// <summary>
+		/// </summary>
+		/// <param name="clientFactory"></param>
+		public HttpProvider(IHttpClientFactory clientFactory)
 			: this(clientFactory.CreateClient(nameof(HttpProvider))) {
 		}
 
 		/// <inheritdoc />
-		public ValueTask<SearchResponse> SearchAsync(string query) {
-			throw new NotSupportedException();
+		public ValueTask<IReadOnlyList<ITrackResult>> SearchAsync(string query) {
+			throw new NotSupportedException($"{nameof(HttpProvider)} doesn't support {nameof(SearchAsync)}.");
 		}
 
 		/// <inheritdoc />
-		public async ValueTask<Stream> GetStreamAsync(string url) {
-			if (string.IsNullOrWhiteSpace(url)) {
-				throw new ArgumentNullException(nameof(url), "Url cannot be null or empty.");
-			}
-
-			if (!Uri.IsWellFormedUriString(url, UriKind.Absolute)) {
-				throw new UriFormatException($"{nameof(url)} must be a proper URL type.");
-			}
-
-			using var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
-			var responseMessage = await _httpClient.SendAsync(requestMessage)
-			   .ConfigureAwait(false);
-
-			var content = responseMessage.Content;
-			if (!content.Headers.ContentType.MediaType.Contains("audio")) {
-				throw new Exception("URL missing audio headers.");
-			}
-
-			var stream = await content.ReadAsStreamAsync()
-			   .ConfigureAwait(false);
-
-			stream.Position = 0;
-			return stream;
+		public ValueTask<ITrackResult> GetTrackAsync(string query) {
+			throw new NotSupportedException($"{nameof(HttpProvider)} doesn't support {nameof(GetTrackAsync)}.");
 		}
 
 		/// <inheritdoc />
-		public ValueTask<Stream> GetStreamAsync(TrackInfo track) {
-			throw new NotSupportedException();
+		public ValueTask<IPlaylistResult> GetPlaylistAsync(string query) {
+			throw new NotSupportedException($"{nameof(HttpProvider)} doesn't support {nameof(GetPlaylistAsync)}.");
 		}
 
 		/// <inheritdoc />
-		public ValueTask DisposeAsync() {
-			_httpClient.Dispose();
-			return default;
+		public async ValueTask<PipedStream> GetTrackStreamAsync(string trackIdentifier) {
+			Guard.NotNull(nameof(trackIdentifier), trackIdentifier);
+			Guard.IsValidUrl(nameof(trackIdentifier), trackIdentifier);
+
+			var pipedStream = await _httpClient.GetPipedStreamAsync(trackIdentifier);
+			return pipedStream;
+		}
+
+		/// <inheritdoc />
+		public ValueTask<PipedStream> GetTrackStreamAsync(ITrackResult trackResult) {
+			throw new NotSupportedException($"{nameof(HttpProvider)} doesn't support {nameof(GetTrackStreamAsync)}.");
 		}
 	}
 }
