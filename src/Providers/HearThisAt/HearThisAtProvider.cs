@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Dysc.Interfaces;
 using Dysc.Providers.HearThisAt.Entities;
@@ -29,9 +29,7 @@ namespace Dysc.Providers.HearThisAt {
 			_httpClient = httpClient;
 		}
 
-		/// <summary>
-		/// </summary>
-		/// <param name="clientFactory"></param>
+		/// <inheritdoc />
 		public HearThisAtProvider(IHttpClientFactory clientFactory)
 			: this(clientFactory.CreateClient(nameof(HearThisAtProvider))) {
 		}
@@ -44,7 +42,7 @@ namespace Dysc.Providers.HearThisAt {
 			   .WithParameter("count", "10");
 
 			var hearThisTracks = await _httpClient
-			   .GetFromJsonAsync<IReadOnlyList<HearThisTrack>>(requestUrl)
+			   .ReadFromJsonAsync<IReadOnlyList<HearThisTrack>>(requestUrl)
 			   .ConfigureAwait(false);
 			return hearThisTracks;
 		}
@@ -55,7 +53,7 @@ namespace Dysc.Providers.HearThisAt {
 			Guard.IsValidUrl(nameof(query), query);
 
 			var hearThisTrack = await _httpClient
-			   .GetFromJsonAsync<HearThisTrack>(query.Replace(URL, API_URL))
+			   .ReadFromJsonAsync<HearThisTrack>(query.Replace(URL, API_URL))
 			   .ConfigureAwait(false);
 			return hearThisTrack;
 		}
@@ -66,8 +64,7 @@ namespace Dysc.Providers.HearThisAt {
 			Guard.IsValidUrl(nameof(query), query);
 
 			var requestUrl = query.Replace(URL, API_URL);
-			var hearThisTracks = await _httpClient.GetFromJsonAsync<IReadOnlyList<HearThisTrack>>(requestUrl)
-			   .ConfigureAwait(false);
+			var hearThisTracks = await _httpClient.ReadFromJsonAsync<IReadOnlyCollection<HearThisTrack>>(requestUrl);
 
 			return default;
 		}
@@ -77,13 +74,12 @@ namespace Dysc.Providers.HearThisAt {
 			Guard.NotNull(nameof(trackIdentifier), trackIdentifier);
 			Guard.IsValidUrl(nameof(trackIdentifier), trackIdentifier);
 
-			var trackUrl = trackIdentifier.Replace(URL, API_URL);
-			var responseMessage = await _httpClient.GetAsync(trackUrl)
-			   .ConfigureAwait(false);
+			if (new Uri(trackIdentifier).Segments[^1] != "listen") {
+				trackIdentifier = trackIdentifier.WithPath("listen");
+			}
 
-			Guard.IsSuccessfulResponse(responseMessage);
-
-			return default;
+			var pipedStream = await _httpClient.GetPipedStreamAsync(trackIdentifier);
+			return pipedStream;
 		}
 
 		/// <inheritdoc />
