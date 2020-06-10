@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -63,10 +63,51 @@ namespace Dysc.Providers.HearThisAt {
 			Guard.NotNull(nameof(query), query);
 			Guard.IsValidUrl(nameof(query), query);
 
-			var requestUrl = query.Replace(URL, API_URL);
-			var hearThisTracks = await _httpClient.ReadFromJsonAsync<IReadOnlyCollection<HearThisTrack>>(requestUrl);
+			async Task<HearThisPlaylist> GetPlaylistInfoAsync() {
+				var urlSplits = query.Remove(0, URL.Length).Split('/');
+				var artistName = urlSplits[0];
+				var playlistName = (string.IsNullOrWhiteSpace(urlSplits[^1]) ? urlSplits[^2] : urlSplits[^1])
+				   .Replace('-', ' ');
 
-			return default;
+				var playlistUrl = API_URL
+				   .WithPath(artistName)
+				   .WithParameter("type", "playlists");
+
+				var hearThisPlaylists = await _httpClient.ReadFromJsonAsync<IReadOnlyCollection<HearThisPlaylist>>(playlistUrl);
+				var defaultPlaylist = default(HearThisPlaylist);
+				foreach (var playlist in hearThisPlaylists) {
+					var lowerPlaylist = playlist.Title.ToLower();
+					if (lowerPlaylist == playlistName) {
+						defaultPlaylist = playlist;
+						break;
+					}
+
+					if (lowerPlaylist.Contains(playlistName)) {
+						defaultPlaylist = playlist;
+						break;
+					}
+
+
+					if (!playlistName.Contains(lowerPlaylist)) {
+						continue;
+					}
+
+					defaultPlaylist = playlist;
+					break;
+				}
+
+				return defaultPlaylist ?? new HearThisPlaylist();
+			}
+
+			var hearThisPlaylist = await GetPlaylistInfoAsync();
+			var requestUrl = query.Replace(URL, API_URL);
+			var hearThisTracks = await _httpClient.ReadFromJsonAsync<IReadOnlyList<HearThisTrack>>(requestUrl);
+
+			hearThisPlaylist.Duration = hearThisTracks.Sum(x => int.Parse(x.RawDuration));
+			hearThisPlaylist.Tracks = hearThisTracks;
+			hearThisPlaylist.Url ??= query;
+
+			return hearThisPlaylist;
 		}
 
 		/// <inheritdoc />
@@ -74,7 +115,7 @@ namespace Dysc.Providers.HearThisAt {
 			Guard.NotNull(nameof(trackIdentifier), trackIdentifier);
 			Guard.IsValidUrl(nameof(trackIdentifier), trackIdentifier);
 
-			if (new Uri(trackIdentifier).Segments[^1] != "listen") {
+			if (trackIdentifier.AsUri().Segments[^1] != "listen") {
 				trackIdentifier = trackIdentifier.WithPath("listen");
 			}
 
