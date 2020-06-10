@@ -192,8 +192,8 @@ namespace Dysc {
 			};
 		}
 
-		internal static TimeSpan ToTimeSpan(this ReadOnlyMemory<byte> memory) {
-			return new TimeSpan(memory.Length);
+		internal static Uri AsUri(this string str) {
+			return new Uri(str);
 		}
 	}
 }
