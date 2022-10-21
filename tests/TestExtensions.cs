@@ -13,9 +13,7 @@ namespace Dysc.Tests {
 			Assert.IsNotNull(trackResult.Id);
 			Assert.IsNotNull(trackResult.Title);
 			Assert.IsNotNull(trackResult.Url);
-
-			// Should be CanBeNull
-			// Assert.IsNotNull(trackResult.ArtworkUrl);
+			
 			if (trackResult.IsStreamable) {
 				Assert.IsNotNull(trackResult.StreamUrl);
 			}
@@ -56,5 +54,9 @@ namespace Dysc.Tests {
 			Assert.IsTrue(decoder.BytesPerSecond != 0);
 			Assert.IsNotNull(decoder.Length);
 		}
+
+        public static void EvaluateResult() {
+            
+        }
 	}
 }

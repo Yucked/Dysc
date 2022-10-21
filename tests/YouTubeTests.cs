@@ -1,121 +1,85 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Dysc.Providers.YouTube;
-using Dysc.Search;
 using Dysc.Tests.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Dysc.Tests {
-    [TestClass]
-    public sealed class YouTubeTests : IProviderTest {
-        private readonly YouTubeProvider _provider;
+	[TestClass]
+	public class YouTubeTests : IProviderTest {
+		private readonly YouTubeProvider _provider;
 
-        public YouTubeTests() {
-            var serviceCollection = new ServiceCollection()
-                .AddHttpClient()
-                .AddSingleton<YouTubeProvider>()
-                .AddSingleton<YouTubeParser>();
+		public YouTubeTests() {
+			var serviceCollection = new ServiceCollection()
+			   .AddHttpClient()
+			   .AddSingleton<YouTubeProvider>();
 
-            var provider = serviceCollection.BuildServiceProvider();
-            _provider = provider.GetRequiredService<YouTubeProvider>();
-        }
+			var provider = serviceCollection.BuildServiceProvider();
+			_provider = provider.GetRequiredService<YouTubeProvider>();
+		}
 
-        [DataTestMethod]
-        [DataRow("SiR Hair Down")]
-        [DataRow("J. Cole No Role Modelz")]
-        [DataRow("The Weeknd Call Out My Name")]
-        [DataRow("Eminem Lucky You")]
-        [DataRow("Logic OCD")]
-        public async Task PerformSearchAsync(string query) {
-            var response = await _provider.SearchAsync(query)
-                .ConfigureAwait(false);
+		[DataTestMethod]
+		[DataRow("SiR Hair Down")]
+		[DataRow("J. Cole No Role Modelz")]
+		[DataRow("The Weeknd Wicked Games")]
+		[DataRow("Eminem Lucky You")]
+		[DataRow("$UICIDEBOY$ x POUYA - SOUTH SIDE $UICIDE")]
+		public async Task SearchAsync(string query) {
+			var trackResults = await _provider.SearchAsync(query)
+			   .ConfigureAwait(false);
 
-            Assert.AreEqual(SearchStatus.SearchResult, response.Status);
-            Assert.IsNotNull(response.Tracks);
-            Assert.IsTrue(response.Tracks.Count > 0);
-            Assert.IsNull(response.Playlist.Name);
-        }
+			Assert.IsNotNull(trackResults);
+			Assert.IsTrue(trackResults.Count != 0);
 
-        [DataTestMethod]
-        [DataRow("https://www.youtube.com/watch?v=ZnKvQbpDYXU&list=PLVfin74Qx3tXoklqU30Xqf8nk9qbgNM8Y")]
-        [DataRow("https://www.youtube.com/playlist?list=PL8Go-YHXcY4bnSo0BDjYt9KuW9izuBD8U")]
-        [DataRow("https://www.youtube.com/playlist?list=OLAK5uy_nrbHEhhkZIpj3-XdSQm75NdaqxRScGpQc&playnext=1&index=1")]
-        [DataRow("https://www.youtube.com/watch?v=-Bg_cVW7vcQ&list=PLTuEWbP7pCjCgg1ET9P6h-Iipre6fQ7sg")]
-        [DataRow("https://www.youtube.com/watch?v=uD4izuDMUQA&list=PLWS2mFp_C6rPPIPDdjOqPIM3b-yxxcFmu")]
-        public async Task GetPlaylistAsync(string playlistUrl) {
-            var response = await _provider.SearchAsync(playlistUrl)
-                .ConfigureAwait(false);
+			foreach (var track in trackResults) {
+				track.IsValidTrack();
+				track.Author.IsValidAuthor();
+			}
+		}
 
-            Assert.AreEqual(SearchStatus.PlaylistLoaded, response.Status);
-            Assert.IsNotNull(response.Playlist);
-            Assert.IsNotNull(response.Playlist.Name);
-            Assert.IsNotNull(response.Tracks);
-            Assert.IsTrue(response.Tracks.Count > 0);
-        }
 
-        [DataTestMethod]
-        [DataRow("https://www.youtube.com/watch?v=JqvdAuuXVyA")]
-        [DataRow("https://www.youtube.com/watch?v=aaet7EygdsE")]
-        [DataRow("https://www.youtube.com/watch?v=pERXVqS54XE")]
-        [DataRow("https://www.youtube.com/watch?v=ZnKvQbpDYXU")]
-        [DataRow("https://www.youtube.com/watch?v=BaOScwq_lZs")]
-        [DataRow("http://www.youtube.com/watch?v=-wtIMTCHWuI")]
-        [DataRow("http://youtu.be/-wtIMTCHWuI")]
-        [DataRow("https: //www.youtube.com/watch?v=0zM3nApSvMg#t=0m10s")]
-        [DataRow("http://www.youtube.com/?v=dQw4w9WgXcQ")]
-        [DataRow("http://youtu.be/oTJRivZTMLs&feature=channel")]
-        [DataRow("https://www.youtube.com/watch?v=JqvdAuuXVyA")]
-        [DataRow("https://www.youtube.com/watch?v=aaet7EygdsE")]
-        public async Task GetTrackAsync(string trackUrl) {
-            var response = await _provider.SearchAsync(trackUrl)
-                .ConfigureAwait(false);
+		[DataTestMethod]
+		[DataRow("https://www.youtube.com/watch?v=ygTZZpVkmKg")]
+		[DataRow("https://www.youtube.com/watch?v=lKqUggbSlHw")]
+		[DataRow("https://www.youtube.com/watch?v=PW6Wvg_fxAQ")]
+		[DataRow("https://www.youtube.com/watch?v=8J_0wkmqq8o")]
+		[DataRow("https://www.youtube.com/watch?v=imOUKPruPHk")]
+		public async Task GetTrackAsync(string trackUrl) {
+			var track = await _provider.GetTrackAsync(trackUrl)
+			   .ConfigureAwait(false);
 
-            var track = response.Tracks.FirstOrDefault();
-            YouTubeParser.ParseId(trackUrl, out var videoId, out _);
+			track.IsValidTrack();
+			track.Author.IsValidAuthor();
+		}
 
-            Assert.AreEqual(SearchStatus.TrackLoaded, response.Status);
-            Assert.IsTrue(response.Tracks.Count == 1, $"{response.Tracks.Count} tracks.");
-            Assert.IsTrue(track.Id == videoId, $"{track.Id} != {videoId}");
-        }
+		[DataTestMethod]
+		[DataRow("https://www.youtube.com/watch?v=vYPIOaqNlyg&list=RDCLAK5uy_n7QjhERM2Q4Ha5B6t6ZmzyhOtRYjQtxKk")]
+		[DataRow("https://www.youtube.com/watch?v=hlFOLS7vKaQ&list=OLAK5uy_nyPpHefgBGBt_CgAaqT3PV6BLxh_tU59s&index=1")]
+		[DataRow("https://www.youtube.com/watch?v=_FU8xyVC-tk&list=PL-2HG0C5jJQG5n1GVlif-9S-FnQ1dIuKM")]
+		[DataRow("https://www.youtube.com/watch?v=iE4_dtz8u28&list=RDCLAK5uy_lWC9PGFnzJWI7RvkLcFUBICdb3UhfzLbs")]
+		[DataRow("https://www.youtube.com/watch?v=JH398xAYpZA&list=OLAK5uy_lwaD8UXRautA8W9eWT4zZOvwf5Ktxpax8")]
+		public async Task GetPlaylistAsync(string playlistUrl) {
+			var playlist = await _provider.GetPlaylistAsync(playlistUrl)
+			   .ConfigureAwait(false);
 
-        [DataTestMethod]
-        [DataRow("https://www.youtube.com/watch?v=JqvdAuuXVyA")]
-        [DataRow("https://www.youtube.com/watch?v=aaet7EygdsE")]
-        [DataRow("https://www.youtube.com/watch?v=pERXVqS54XE")]
-        [DataRow("https://www.youtube.com/watch?v=ZnKvQbpDYXU")]
-        [DataRow("https://www.youtube.com/watch?v=BaOScwq_lZs")]
-        public async Task GetStreamAsync(string trackUrl) {
-            var stream = await _provider.GetStreamAsync(trackUrl)
-                .ConfigureAwait(false);
+			playlist.IsValidPlaylist();
+			playlist.Author.IsValidAuthor();
 
-            Assert.IsNotNull(stream);
-            Assert.IsTrue(stream.CanRead);
-            Assert.IsFalse(stream.Length == 0);
-        }
+			foreach (var track in playlist.Tracks) {
+				track.IsValidTrack();
+				track.Author.IsValidAuthor();
+			}
+		}
 
-        [DataTestMethod]
-        [DataRow("http://www.youtube.com/watch?v=-wtIMTCHWuI")]
-        [DataRow("http://youtu.be/-wtIMTCHWuI")]
-        [DataRow("https: //www.youtube.com/watch?v=0zM3nApSvMg#t=0m10s")]
-        [DataRow("http://www.youtube.com/?v=dQw4w9WgXcQ")]
-        [DataRow("http://youtu.be/oTJRivZTMLs&feature=channel")]
-        [DataRow("https://www.youtube.com/watch?v=JqvdAuuXVyA")]
-        [DataRow("https://www.youtube.com/watch?v=aaet7EygdsE")]
-        public void ParseVideoId(string url) {
-            YouTubeParser.ParseId(url, out var videoId, out _);
-            Assert.IsNotNull(videoId);
-        }
-
-        [DataTestMethod]
-        [DataRow("https://www.youtube.com/watch?v=ZnKvQbpDYXU&list=PLVfin74Qx3tXoklqU30Xqf8nk9qbgNM8Y")]
-        [DataRow("https://www.youtube.com/playlist?list=PL8Go-YHXcY4bnSo0BDjYt9KuW9izuBD8U")]
-        [DataRow("https://www.youtube.com/playlist?list=OLAK5uy_nrbHEhhkZIpj3-XdSQm75NdaqxRScGpQc&playnext=1&index=1")]
-        [DataRow("https://www.youtube.com/watch?v=-Bg_cVW7vcQ&list=PLTuEWbP7pCjCgg1ET9P6h-Iipre6fQ7sg")]
-        [DataRow("https://www.youtube.com/watch?v=uD4izuDMUQA&list=PLWS2mFp_C6rPPIPDdjOqPIM3b-yxxcFmu")]
-        public void ParsePlaylistId(string url) {
-            YouTubeParser.ParseId(url, out _, out var playlistId);
-            Assert.IsNotNull(playlistId);
-        }
-    }
+		[DataTestMethod]
+		[DataRow("https://www.youtube.com/watch?v=ygTZZpVkmKg")]
+		[DataRow("https://www.youtube.com/watch?v=lKqUggbSlHw")]
+		[DataRow("https://www.youtube.com/watch?v=PW6Wvg_fxAQ")]
+		[DataRow("https://www.youtube.com/watch?v=8J_0wkmqq8o")]
+		[DataRow("https://www.youtube.com/watch?v=imOUKPruPHk")]
+		public async Task GetStreamAsync(string trackUrl) {
+			var stream = await _provider.GetTrackStreamAsync(trackUrl);
+			Assert.IsNotNull(stream);
+		}
+	}
 }
