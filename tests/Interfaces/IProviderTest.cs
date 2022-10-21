@@ -1,13 +1,13 @@
 ﻿using System.Threading.Tasks;
 
 namespace Dysc.Tests.Interfaces {
-    public interface IProviderTest {
-        Task PerformSearchAsync(string query);
+	public interface IProviderTest {
+		Task SearchAsync(string query);
 
-        Task GetPlaylistAsync(string playlistUrl);
+		Task GetTrackAsync(string trackUrl);
 
-        Task GetTrackAsync(string trackUrl);
+		Task GetPlaylistAsync(string playlistUrl);
 
-        Task GetStreamAsync(string trackUrl);
-    }
+		Task GetStreamAsync(string trackUrl);
+	}
 }

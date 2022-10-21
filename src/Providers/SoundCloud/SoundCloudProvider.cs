@@ -29,12 +29,7 @@ namespace Dysc.Providers.SoundCloud {
 			_ = _cloudParser.ValidateClientIdAsync();
 		}
 
-		/// <inheritdoc />
-		public SoundCloudProvider(IHttpClientFactory httpClientFactory)
-			: this(httpClientFactory.CreateClient(nameof(SoundCloudProvider))) {
-		}
-
-		/// <inheritdoc />
+        /// <inheritdoc />
 		public async ValueTask<IReadOnlyList<ITrackResult>> SearchAsync(string query) {
 			Guard.NotNull(nameof(query), query);
 
@@ -76,10 +71,11 @@ namespace Dysc.Providers.SoundCloud {
 			   .WithParameter("client_id", SoundCloudParser.ClientId);
 
 			var soundCloudPlaylist = await _httpClient.ReadFromJsonAsync<SoundCloudPlaylist>(requestUrl);
-			var tracks = soundCloudPlaylist.CloudTracks.Where(x =>
-				string.IsNullOrWhiteSpace(x.Title) &&
-				string.IsNullOrWhiteSpace(x.Url) &&
-				(x.FullDuration > 0 || x.TempDuration > 0));
+			var tracks = soundCloudPlaylist.CloudTracks
+			   .Where(x =>
+					string.IsNullOrWhiteSpace(x.Title) &&
+					string.IsNullOrWhiteSpace(x.Url) &&
+					(x as ITrackResult).Duration > 0);
 
 			soundCloudPlaylist.CloudTracks = tracks.ToArray();
 			return soundCloudPlaylist;
